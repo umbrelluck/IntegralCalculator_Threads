@@ -1,0 +1,9 @@
+n_threads 5
+rel_error 0.001
+x_arr -100 100
+y_arr -100 100
+size 5
+base_val1= 1 2 3 4 5 
+base_val2 1 2 3 4 5
+abs_error = 0.5
+coeff 1 2 3 4 5

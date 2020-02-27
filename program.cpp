@@ -1,9 +1,12 @@
 #include <iostream>
-#include <iostream>
 #include <fstream>
 #include <vector>
 #include <math.h>
-#include <map>
+// #include <math>
+#include <tuple>
+#include <string>
+
+// #define M_PI 3.14;
 
 double function(double x1, double x2, int m, std::vector<double> &a1, std::vector<double> &a2, std::vector<double> &c)
 {
@@ -15,57 +18,174 @@ double function(double x1, double x2, int m, std::vector<double> &a1, std::vecto
     return -sum;
 }
 
-void calculateIntegral(std::map<std::string, float> &config, std::vector<double> &a1, std::vector<double> &a2, std::vector<double> &c)
+struct config
 {
-}
+    double abs_error;
+    double rel_error;
+    int n_threads;
+    std::tuple<double, double> x_arr;
+    std::tuple<double, double> y_arr;
+    int size;
+    std::vector<double> coeff;
+    std::vector<double> base_val1;
+    std::vector<double> base_val2;
+};
 
-void readFromFile(std::ifstream &file, std::map<std::string, float> *config, std::vector<double> *a1, std::vector<double> *a2, std::vector<double> *c)
+int readFromFile(std::ifstream &file, config &configs)
 {
-    std::string key, value;
-    while (file >> value)
+    std::string key, m_value;
+    while (file >> key >> m_value)
     {
-        if (!std::isdigit(value[0]))
-            key = value;
-        else
-            float dp = std::stof(value);
-        // config.
-        // file >> value;
-        // config.insert({key, value});
+
+        try
+        {
+            if (key.find("abs") != std::string::npos)
+                if (m_value == "=")
+                    file >> configs.abs_error;
+                else
+                    configs.abs_error = std::stod(m_value);
+            else if (key.find("rel") != std::string::npos)
+                if (m_value == "=")
+                    file >> configs.rel_error;
+                else
+                    configs.rel_error = std::stod(m_value);
+            else if (key.find("n") != std::string::npos)
+                if (m_value == "=")
+                    file >> configs.n_threads;
+                else
+                    configs.n_threads = std::stoi(m_value);
+            else if (key.find("size") != std::string::npos)
+                if (m_value == "=")
+                    file >> configs.size;
+                else
+                    configs.size = std::stoi(m_value);
+            else if (key.find("x") != std::string::npos)
+                if (m_value == "=")
+                {
+                    double x1, x2;
+                    file >> x1 >> x2;
+                    configs.x_arr = std::make_tuple(x1, x2);
+                }
+                else
+                {
+                    double x2;
+                    file>>x2;
+                    configs.x_arr = std::make_tuple(std::stod(m_value), x2);
+                }
+            else if (key.find("y") != std::string::npos)
+                if (m_value == "=")
+                {
+                    double y1, y2;
+                    file >> y1 >> y2;
+                    configs.y_arr = std::make_tuple(y1, y2);
+                }
+                else
+                {
+                    double y2;
+                    file>>y2;
+                    configs.y_arr = std::make_tuple(std::stod(m_value), y2);
+                }
+            else if (key.find("coeff") != std::string::npos)
+            {
+                int minus;
+                if (m_value == "=")
+                    minus = 0;
+                else
+                {
+                    minus = 1;
+                    configs.coeff.push_back(std::stod(m_value));
+                }
+                double value;
+                for (int i = 0; i < configs.size - minus; ++i)
+                {
+                    file >> value;
+                    configs.coeff.push_back(value);
+                }
+            }
+            else if (key.find("1") != std::string::npos)
+            {
+                int minus;
+                if (m_value == "=")
+                    minus = 0;
+                else
+                {
+                    minus = 1;
+                    configs.base_val1.push_back(std::stod(m_value));
+                }
+                double value;
+                for (int i = 0; i < configs.size - minus; ++i)
+                {
+                    file >> value;
+                    configs.base_val1.push_back(value);
+                }
+            }
+            else if (key.find("2") != std::string::npos)
+            {
+                int minus;
+                if (m_value == "=")
+                    minus = 0;
+                else
+                {
+                    minus = 1;
+                    configs.base_val2.push_back(std::stod(m_value));
+                }
+                double value;
+                for (int i = 0; i < configs.size - minus; ++i)
+                {
+                    file >> value;
+                    configs.base_val2.push_back(value);
+                }
+            }
+        }
+        catch (std::exception e)
+        {
+            return 1;
+        }
     }
+    std::cout << "Working";
+    return 0;
 }
 
-int checkConfig(std::map<std::string, float> config)
+int checkConfig(config &configs, int inst_check)
 {
-    return 1;
+    if (inst_check)
+        return inst_check;
+    if (configs.abs_error < 0 || configs.rel_error < 0)
+        return 1;
+    if (configs.abs_error < configs.rel_error)
+    {
+        std::cout << "  ! abs_error < rel_error, switching values...";
+        double tmp = configs.abs_error;
+        configs.abs_error = configs.rel_error;
+        configs.rel_error = tmp;
+    }
+    return 0;
 }
 
 int main(int argc, char **argv)
 {
+    // std::string fileName;
+    std::string fileName;
     if (argc == 1)
     {
         std::cout << "  ! No file specified\n";
-        return 1;
+        std::cout << "  ! Using default name 'conf.txt'\n";
+        fileName = "conf.txt";
     }
-    std::ifstream file(argv[1]);
+    else
+        fileName = argv[1];
+    std::ifstream file(fileName);
     if (!file)
     {
         std::cout << "  ! No such file\n";
         return 1;
     }
-    std::map<std::string, float> config = {
-        {"abs", 0},
-        {"rel", 0},
-        {"n_threads", 0},
-        {"x1", 0},
-        {"x2", 0},
-        {"y1", 0},
-        {"size", 0},
-        {"abs", 0},
-    };
-    std::vector<double> a1, a2, c;
-    readFromFile(file, &config, &a1, &a2, &c);
-    if (checkConfig(config))
-        std::cout << "  ! Error in configuration file\n";
-    return 1;
+    config configs;
+    int inst_check = readFromFile(file, configs);
+    // if (checkConfig(configs, inst_check))
+    // {
+    //     std::cout << "  ! Error in configuration file\n";
+    //     return 1;
+    // }
     return 0;
 }
