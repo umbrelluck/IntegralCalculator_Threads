@@ -52,110 +52,102 @@ int readFromFile(std::ifstream &file, config &configs)
     std::string key, m_value;
     while (file >> key >> m_value)
     {
-
-        try
+        if (key.find("abs") != std::string::npos)
+            if (m_value == "=")
+                file >> configs.abs_error;
+            else
+                configs.abs_error = std::stod(m_value);
+        else if (key.find("rel") != std::string::npos)
+            if (m_value == "=")
+                file >> configs.rel_error;
+            else
+                configs.rel_error = std::stod(m_value);
+        else if (key.find("n") != std::string::npos)
+            if (m_value == "=")
+                file >> configs.n_threads;
+            else
+                configs.n_threads = std::stoi(m_value);
+        else if (key.find("size") != std::string::npos)
+            if (m_value == "=")
+                file >> configs.size;
+            else
+                configs.size = std::stoi(m_value);
+        else if (key.find("x") != std::string::npos)
+            if (m_value == "=")
+            {
+                double x1, x2;
+                file >> x1 >> x2;
+                configs.x_arr = std::make_tuple(x1, x2);
+            }
+            else
+            {
+                double x2;
+                file >> x2;
+                configs.x_arr = std::make_tuple(std::stod(m_value), x2);
+            }
+        else if (key.find("y") != std::string::npos)
+            if (m_value == "=")
+            {
+                double y1, y2;
+                file >> y1 >> y2;
+                configs.y_arr = std::make_tuple(y1, y2);
+            }
+            else
+            {
+                double y2;
+                file >> y2;
+                configs.y_arr = std::make_tuple(std::stod(m_value), y2);
+            }
+        else if (key.find("coeff") != std::string::npos)
         {
-            if (key.find("abs") != std::string::npos)
-                if (m_value == "=")
-                    file >> configs.abs_error;
-                else
-                    configs.abs_error = std::stod(m_value);
-            else if (key.find("rel") != std::string::npos)
-                if (m_value == "=")
-                    file >> configs.rel_error;
-                else
-                    configs.rel_error = std::stod(m_value);
-            else if (key.find("n") != std::string::npos)
-                if (m_value == "=")
-                    file >> configs.n_threads;
-                else
-                    configs.n_threads = std::stoi(m_value);
-            else if (key.find("size") != std::string::npos)
-                if (m_value == "=")
-                    file >> configs.size;
-                else
-                    configs.size = std::stoi(m_value);
-            else if (key.find("x") != std::string::npos)
-                if (m_value == "=")
-                {
-                    double x1, x2;
-                    file >> x1 >> x2;
-                    configs.x_arr = std::make_tuple(x1, x2);
-                }
-                else
-                {
-                    double x2;
-                    file >> x2;
-                    configs.x_arr = std::make_tuple(std::stod(m_value), x2);
-                }
-            else if (key.find("y") != std::string::npos)
-                if (m_value == "=")
-                {
-                    double y1, y2;
-                    file >> y1 >> y2;
-                    configs.y_arr = std::make_tuple(y1, y2);
-                }
-                else
-                {
-                    double y2;
-                    file >> y2;
-                    configs.y_arr = std::make_tuple(std::stod(m_value), y2);
-                }
-            else if (key.find("coeff") != std::string::npos)
+            int minus;
+            if (m_value == "=")
+                minus = 0;
+            else
             {
-                int minus;
-                if (m_value == "=")
-                    minus = 0;
-                else
-                {
-                    minus = 1;
-                    configs.coeff.push_back(std::stod(m_value));
-                }
-                double value;
-                for (int i = 0; i < configs.size - minus; ++i)
-                {
-                    file >> value;
-                    configs.coeff.push_back(value);
-                }
+                minus = 1;
+                configs.coeff.push_back(std::stod(m_value));
             }
-            else if (key.find("1") != std::string::npos)
+            double value;
+            for (int i = 0; i < configs.size - minus; ++i)
             {
-                int minus;
-                if (m_value == "=")
-                    minus = 0;
-                else
-                {
-                    minus = 1;
-                    configs.base_val1.push_back(std::stod(m_value));
-                }
-                double value;
-                for (int i = 0; i < configs.size - minus; ++i)
-                {
-                    file >> value;
-                    configs.base_val1.push_back(value);
-                }
-            }
-            else if (key.find("2") != std::string::npos)
-            {
-                int minus;
-                if (m_value == "=")
-                    minus = 0;
-                else
-                {
-                    minus = 1;
-                    configs.base_val2.push_back(std::stod(m_value));
-                }
-                double value;
-                for (int i = 0; i < configs.size - minus; ++i)
-                {
-                    file >> value;
-                    configs.base_val2.push_back(value);
-                }
+                file >> value;
+                configs.coeff.push_back(value);
             }
         }
-        catch (std::exception e)
+        else if (key.find("1") != std::string::npos)
         {
-            return 1;
+            int minus;
+            if (m_value == "=")
+                minus = 0;
+            else
+            {
+                minus = 1;
+                configs.base_val1.push_back(std::stod(m_value));
+            }
+            double value;
+            for (int i = 0; i < configs.size - minus; ++i)
+            {
+                file >> value;
+                configs.base_val1.push_back(value);
+            }
+        }
+        else if (key.find("2") != std::string::npos)
+        {
+            int minus;
+            if (m_value == "=")
+                minus = 0;
+            else
+            {
+                minus = 1;
+                configs.base_val2.push_back(std::stod(m_value));
+            }
+            double value;
+            for (int i = 0; i < configs.size - minus; ++i)
+            {
+                file >> value;
+                configs.base_val2.push_back(value);
+            }
         }
     }
     return 0;
@@ -198,7 +190,7 @@ double integrate(fun_T fun, config &configs, int step)
     for (x = std::get<0>(configs.x_arr); x <= std::get<1>(configs.x_arr); x += d_x)
         for (y = std::get<0>(configs.y_arr); y <= std::get<1>(configs.y_arr); y += d_y)
         {
-            res+= fun(x, y, configs.size, configs.base_val1, configs.base_val2, configs.coeff)*d_x*d_y;
+            res += fun(x, y, configs.size, configs.base_val1, configs.base_val2, configs.coeff) * d_x * d_y;
         }
 
     return res;
@@ -242,8 +234,14 @@ int main(int argc, char **argv)
     if (argc == 1)
     {
         std::cout << "  ! No file specified\n";
-        std::cout << "  ! Using default name 'conf.txt'\n";
+        std::cout << "    => Using default name 'conf.txt'\n";
         fileName = "conf.txt";
+    }
+    else if (argc > 2)
+    {
+        std::cout << "  ! Incorrect usage of the program (to many arguements)\n"
+                  << "    Correct is ./intCalculator [FILE]\n";
+        return 1;
     }
     else
         fileName = argv[1];
@@ -262,7 +260,18 @@ int main(int argc, char **argv)
     }
 
     double value = find_best_integral(function, configs);
-    std::cout << "Result is " << value;
+    std::cout << "Result is " << value<<"\n";
 
     return 0;
 }
+/* 
+
+
+1. function x2 faster
+2. errors in reading
+3. time
+4. rel and abs error
+
+
+
+ */
