@@ -1,12 +1,28 @@
+#include<atomic>
+#include <chrono>
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <math.h>
-// #include <math>
+#include <cmath>
 #include <tuple>
 #include <string>
+#include <cassert>
 
-// #define M_PI 3.14;
+inline std::chrono::steady_clock::time_point get_current_time_fenced()
+{
+    assert(std::chrono::steady_clock::is_steady &&
+           "Timer should be steady (monotonic).");
+    std::atomic_thread_fence(std::memory_order_seq_cst);
+    auto res_time = std::chrono::steady_clock::now();
+    std::atomic_thread_fence(std::memory_order_seq_cst);
+    return res_time;
+}
+
+template <class D>
+inline long long to_us(const D &d)
+{
+    return std::chrono::duration_cast<std::chrono::microseconds>(d).count();
+}
 
 double function(double x1, double x2, int m, std::vector<double> &a1, std::vector<double> &a2, std::vector<double> &c)
 {
@@ -69,7 +85,7 @@ int readFromFile(std::ifstream &file, config &configs)
                 else
                 {
                     double x2;
-                    file>>x2;
+                    file >> x2;
                     configs.x_arr = std::make_tuple(std::stod(m_value), x2);
                 }
             else if (key.find("y") != std::string::npos)
@@ -82,7 +98,7 @@ int readFromFile(std::ifstream &file, config &configs)
                 else
                 {
                     double y2;
-                    file>>y2;
+                    file >> y2;
                     configs.y_arr = std::make_tuple(std::stod(m_value), y2);
                 }
             else if (key.find("coeff") != std::string::npos)
@@ -142,7 +158,6 @@ int readFromFile(std::ifstream &file, config &configs)
             return 1;
         }
     }
-    std::cout << "Working";
     return 0;
 }
 
@@ -182,10 +197,10 @@ int main(int argc, char **argv)
     }
     config configs;
     int inst_check = readFromFile(file, configs);
-    // if (checkConfig(configs, inst_check))
-    // {
-    //     std::cout << "  ! Error in configuration file\n";
-    //     return 1;
-    // }
+    if (checkConfig(configs, inst_check))
+    {
+        std::cout << "  ! Error in configuration file\n";
+        return 1;
+    }
     return 0;
 }
