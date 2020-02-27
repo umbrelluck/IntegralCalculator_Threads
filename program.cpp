@@ -1,4 +1,4 @@
-#include<atomic>
+#include <atomic>
 #include <chrono>
 #include <iostream>
 #include <fstream>
@@ -27,9 +27,9 @@ inline long long to_us(const D &d)
 double function(double x1, double x2, int m, std::vector<double> &a1, std::vector<double> &a2, std::vector<double> &c)
 {
     double sum = 0;
-    for (auto i = 0; i < m; ++i)
+    for (int i = 0; i < m; ++i)
     {
-        sum += c[i] * exp(-(1 / M_PI) * (pow((x1 - a1[i]), 2) - pow((x2 - a2[i]), 2))) * cos(M_PI * (pow((x1 - a1[i]), 2) - pow((x2 - a2[i]), 2)));
+        sum += c[i] * exp(-(1 / M_PI) * (pow(x1 - a1[i], 2) + pow(x2 - a2[i], 2))) * cos(M_PI * (pow(x1 - a1[i], 2) + pow(x2 - a2[i], 2)));
     }
     return -sum;
 }
@@ -177,6 +177,66 @@ int checkConfig(config &configs, int inst_check)
     return 0;
 }
 
+bool rel_error(double previous, double res, config &con)
+{
+    std::cout << "here is " << fabs((previous - res) / res) << "\n";
+    return fabs((previous - res) / res) > con.rel_error;
+}
+
+bool abs_error(double previous, double res, config &con)
+{
+    return fabs(previous - res) > con.abs_error;
+}
+
+template <typename fun_T>
+double integrate(fun_T fun, config &configs, int step)
+{
+    double d_x = (std::get<1>(configs.x_arr) - std::get<0>(configs.x_arr)) / step;
+    double d_y = (std::get<1>(configs.y_arr) - std::get<0>(configs.y_arr)) / step;
+    double x, y, res = 0;
+    double tmp;
+
+    for (x = std::get<0>(configs.x_arr); x <= std::get<1>(configs.x_arr); x += d_x)
+        for (y = std::get<0>(configs.y_arr); y <= std::get<1>(configs.y_arr); y += d_y)
+        {
+            tmp = fun(x, y, configs.size, configs.base_val1, configs.base_val2, configs.coeff)*d_x*d_y;
+            res += tmp;
+        }
+
+    return res;
+}
+
+template <typename fun_T>
+double find_best_integral(fun_T fun, config &configs)
+{
+    double previous = 0;
+    int step = 2;
+    bool to_continue = true;
+    double rel_err, abs_err;
+    // int error_index = (configs.rel_error != 0) ? 0 : 1;
+
+    // typedef bool (*fn)(double, double, config &);
+    // fn errors[] = {rel_error, abs_error};
+
+    double res = integrate(fun, configs, step);
+    // while (errors[error_index](previous, res, configs))
+    while (to_continue)
+    {
+        step *= 2;
+        previous = res;
+        res = integrate(fun, configs, step);
+
+        abs_err = fabs(res - previous);
+        rel_err = fabs((res - previous) / res);
+
+        std::cout << previous << " " << res << " REl error is " << rel_err << "\n";
+        // to_continue = (abs_err > configs.abs_error);
+        to_continue = to_continue && (rel_err > configs.rel_error);
+    }
+
+    return res;
+}
+
 int main(int argc, char **argv)
 {
     // std::string fileName;
@@ -202,5 +262,9 @@ int main(int argc, char **argv)
         std::cout << "  ! Error in configuration file\n";
         return 1;
     }
+
+    double value = find_best_integral(function, configs);
+    std::cout << "Result is " << value;
+
     return 0;
 }

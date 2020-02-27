@@ -111,10 +111,11 @@ int main(int argc, char* argv[])
     if(argc == 2)
         filename = argv[1];
     if(argc > 2) {
-        cerr << "Too many arguments. Usage: \n"
+        cerr << "Too many argumecur_resnts. Usage: \n"
                 "<program>\n"
                 "or\n"
-                "<program> <config-filename>\n" << endl;
+                "<program> <config-filename>\n"
+             << endl;
         return 1;
     }
     ifstream config_stream(filename);
