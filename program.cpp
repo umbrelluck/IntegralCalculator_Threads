@@ -179,7 +179,6 @@ int checkConfig(config &configs, int inst_check)
 
 bool rel_error(double previous, double res, config &con)
 {
-    std::cout << "here is " << fabs((previous - res) / res) << "\n";
     return fabs((previous - res) / res) > con.rel_error;
 }
 
@@ -199,8 +198,7 @@ double integrate(fun_T fun, config &configs, int step)
     for (x = std::get<0>(configs.x_arr); x <= std::get<1>(configs.x_arr); x += d_x)
         for (y = std::get<0>(configs.y_arr); y <= std::get<1>(configs.y_arr); y += d_y)
         {
-            tmp = fun(x, y, configs.size, configs.base_val1, configs.base_val2, configs.coeff)*d_x*d_y;
-            res += tmp;
+            res+= fun(x, y, configs.size, configs.base_val1, configs.base_val2, configs.coeff)*d_x*d_y;
         }
 
     return res;
@@ -213,25 +211,25 @@ double find_best_integral(fun_T fun, config &configs)
     int step = 2;
     bool to_continue = true;
     double rel_err, abs_err;
-    // int error_index = (configs.rel_error != 0) ? 0 : 1;
+    int error_index = (configs.rel_error != 0) ? 0 : 1;
 
-    // typedef bool (*fn)(double, double, config &);
-    // fn errors[] = {rel_error, abs_error};
+    typedef bool (*fn)(double, double, config &);
+    fn errors[] = {rel_error, abs_error};
 
     double res = integrate(fun, configs, step);
-    // while (errors[error_index](previous, res, configs))
-    while (to_continue)
+    while (errors[error_index](previous, res, configs))
+    // while (to_continue)
     {
         step *= 2;
         previous = res;
         res = integrate(fun, configs, step);
 
-        abs_err = fabs(res - previous);
-        rel_err = fabs((res - previous) / res);
+        // abs_err = fabs(res - previous);
+        // rel_err = fabs((res - previous) / res);
 
-        std::cout << previous << " " << res << " REl error is " << rel_err << "\n";
-        // to_continue = (abs_err > configs.abs_error);
-        to_continue = to_continue && (rel_err > configs.rel_error);
+        // std::cout << previous << " " << res << " REl error is " << rel_err << "\n";
+        // // to_continue = (abs_err > configs.abs_error);
+        // to_continue = to_continue && (rel_err > configs.rel_error);
     }
 
     return res;
