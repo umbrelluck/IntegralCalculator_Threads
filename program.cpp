@@ -7,6 +7,7 @@
 #include <tuple>
 #include <string>
 #include <cassert>
+#include <sstream>
 
 inline std::chrono::steady_clock::time_point get_current_time_fenced()
 {
@@ -27,7 +28,7 @@ inline long long to_us(const D &d)
 double function(double x1, double x2, int m, std::vector<double> &a1, std::vector<double> &a2, std::vector<double> &c)
 {
     double sum = 0;
-    for (int i = 0; i < m; ++i)
+    for (auto i = 0; i < m; ++i)
     {
         sum += c[i] * exp(-(1 / M_PI) * (pow(x1 - a1[i], 2) + pow(x2 - a2[i], 2))) * cos(M_PI * (pow(x1 - a1[i], 2) + pow(x2 - a2[i], 2)));
     }
@@ -41,7 +42,7 @@ struct config
     int n_threads;
     std::tuple<double, double> x_arr;
     std::tuple<double, double> y_arr;
-    int size;
+    size_t size;
     std::vector<double> coeff;
     std::vector<double> base_val1;
     std::vector<double> base_val2;
@@ -71,7 +72,11 @@ int readFromFile(std::ifstream &file, config &configs)
             if (m_value == "=")
                 file >> configs.size;
             else
-                configs.size = std::stoi(m_value);
+            {
+                std::stringstream sstream(m_value);
+                // configs.size = std::stoll(m_value);
+                sstream >> configs.size;
+            }
         else if (key.find("x") != std::string::npos)
             if (m_value == "=")
             {
@@ -159,13 +164,6 @@ int checkConfig(config &configs, int inst_check)
         return inst_check;
     if (configs.abs_error < 0 || configs.rel_error < 0)
         return 1;
-    // if (configs.abs_error < configs.rel_error)
-    // {
-    //     std::cout << "  ! abs_error < rel_error, switching values...";
-    //     double tmp = configs.abs_error;
-    //     configs.abs_error = configs.rel_error;
-    //     configs.rel_error = tmp;
-    // }
     return 0;
 }
 
@@ -206,7 +204,7 @@ double find_best_integral(fun_T fun, config &configs)
 {
     double previous = 0;
     int count = 1;
-    int step = 2;
+    size_t step = 2;
     bool to_continue = true;
     double rel_err, abs_err;
     int error_index = (configs.rel_error != 0) ? 0 : 1;
@@ -214,6 +212,7 @@ double find_best_integral(fun_T fun, config &configs)
     typedef bool (*fn)(double, double, config &);
     fn errors[] = {rel_error, abs_error};
 
+    auto start = get_current_time_fenced();
     double res = integrate(fun, configs, step, count);
     count = 2;
     while (errors[error_index](previous, res, configs))
@@ -224,20 +223,23 @@ double find_best_integral(fun_T fun, config &configs)
         step *= 2;
         res += integrate(fun, configs, step, count);
 
-        abs_err = fabs(res - previous);
-        rel_err = fabs((res - previous) / res);
-
-        std::cout << previous << " " << res << " REl error is " << rel_err << "\n";
+        // std::cout << previous << " " << res << " REl error is " << rel_err << "\n";
         // // to_continue = (abs_err > configs.abs_error);
         // to_continue = to_continue && (rel_err > configs.rel_error);
     }
-
+    auto time_taken = get_current_time_fenced() - start;
+    abs_err = fabs(res - previous);
+    rel_err = fabs((res - previous) / res);
+    std::cout << "\n---------------------------------------------\n";
+    std::cout << "Result: " << res << std::endl;
+    std::cout << "Abs err : rel err " << abs_err << " : " << rel_err << std::endl;
+    std::cout << "Time: " << to_us(time_taken) << "mcs\n";
     return res;
 }
 
 int main(int argc, char **argv)
 {
-    // std::string fileName;
+    std::cout << "\n";
     std::string fileName;
     if (argc == 1)
     {
@@ -268,18 +270,18 @@ int main(int argc, char **argv)
     }
 
     double value = find_best_integral(function, configs);
-    std::cout << "Result is " << value << "\n";
+    // std::cout << "Result is " << value << "\n";
 
     return 0;
 }
 /* 
 
 
-1. function x2 faster
+1. function x2 faster - done 
 2. errors in reading
-3. time
+3. time - done
 4. rel and abs error
-5. size = size_t
+5. size = size_t - done
 
 
 
