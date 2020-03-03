@@ -1,1 +1,0 @@
-/usr/bin/c++ -fPIC -g  -shared -Wl,-soname,libint_lib.so -o libint_lib.so CMakeFiles/int_lib.dir/integral/integral.cpp.o 

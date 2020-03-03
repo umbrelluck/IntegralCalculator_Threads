@@ -1,7 +1,0 @@
-/home/solia/Documents/aks/IntegralCalculator_Threads/cmake-build-debug/CMakeFiles/int_lib.dir
-/home/solia/Documents/aks/IntegralCalculator_Threads/cmake-build-debug/CMakeFiles/config_lib.dir
-/home/solia/Documents/aks/IntegralCalculator_Threads/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/solia/Documents/aks/IntegralCalculator_Threads/cmake-build-debug/CMakeFiles/intCalculator.dir
-/home/solia/Documents/aks/IntegralCalculator_Threads/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/solia/Documents/aks/IntegralCalculator_Threads/cmake-build-debug/CMakeFiles/package.dir
-/home/solia/Documents/aks/IntegralCalculator_Threads/cmake-build-debug/CMakeFiles/package_source.dir

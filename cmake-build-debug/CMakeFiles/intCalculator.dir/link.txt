@@ -1,1 +1,0 @@
-/usr/bin/c++  -g  -rdynamic CMakeFiles/intCalculator.dir/main.cpp.o  -o intCalculator -Wl,-rpath,/home/solia/Documents/aks/IntegralCalculator_Threads/cmake-build-debug libconfig_lib.so libint_lib.so 

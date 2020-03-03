@@ -1,1 +1,0 @@
-/usr/bin/c++ -fPIC -g  -shared -Wl,-soname,libconfig_lib.so -o libconfig_lib.so CMakeFiles/config_lib.dir/config/config.cpp.o 
