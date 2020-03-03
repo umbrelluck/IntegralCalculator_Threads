@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
     // abs_err = 0.05
     // max_iterations = 1000000
     // і т.д.
-    string filename("conf.txt");
+    string filename("example.config");
     if(argc == 2)
         filename = argv[1];
     if(argc > 2) {

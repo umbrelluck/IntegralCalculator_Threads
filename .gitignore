@@ -2,6 +2,6 @@
 !.gitignore
 build
 test*
-program*
-!program.cpp
+main.cpp
+!main.cpp
 1-dim
