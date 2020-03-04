@@ -4,7 +4,6 @@
 
 #include "integral/integral.h"
 
-
 int main(int argc, char **argv)
 {
     std::cout << "\n";
@@ -13,7 +12,7 @@ int main(int argc, char **argv)
     {
         std::cout << " ! No file specified\n";
         std::cout << "  > Using default name 'example.config'\n";
-        fileName = "../example.conf";
+        fileName = "example.conf";
     }
     else if (argc > 2)
     {
@@ -44,7 +43,8 @@ int main(int argc, char **argv)
 
     std::vector<int_calculator> calcs;
 
-    for (size_t i = 0; i < configs.n_threads; i++) {
+    for (size_t i = 0; i < configs.n_threads; i++)
+    {
         config new_configs = configs;
         new_configs.x_arr = std::make_tuple(x_prev, x_prev + x_step);
         new_configs.y_arr = std::make_tuple(y_prev, y_prev + y_step);
@@ -55,16 +55,20 @@ int main(int argc, char **argv)
     }
 
     std::vector<std::thread> threads;
-    for (size_t i = 0; i < configs.n_threads;i++) {
-//        threads.push_back(std::thread(hello, i));
-//        threads.push_back(std::thread(int_calculator::find_best_integral, std::ref(calcs[i])));
+    for (size_t i = 0; i < configs.n_threads; i++)
+    {
+        //        threads.push_back(std::thread(hello, i));
+        threads.emplace_back(int_calculator::find_best_integral, std::ref(calcs[i]));
     }
-    for (size_t i = 0; i < configs.n_threads;i++) {
+    for (size_t i = 0; i < configs.n_threads; i++)
+    {
         threads[i].join();
     }
 
     double res = 0;
-    for (auto& x: calcs) {
+    for (auto &x : calcs)
+    {
+        std::cout << "Calculated " << x.result << "\n";
         res += x.result;
     }
     std::cout << "Result is " << res << "\n";
