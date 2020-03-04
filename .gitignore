@@ -1,7 +1,6 @@
 .*
 !.gitignore
-build
+build/
+cmake-build-debug/
 test*
-main.cpp
-!main.cpp
-1-dim
+1-dim/

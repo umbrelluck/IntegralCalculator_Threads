@@ -4,6 +4,8 @@
 #include <fstream>
 #include <sstream>
 #include <tuple>
+#include <vector>
+#include <string>
 
 struct config
 {
