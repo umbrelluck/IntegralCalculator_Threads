@@ -290,7 +290,7 @@ int main(int argc, char **argv)
 1. function x2 faster - done 
 2. errors in reading
 3. time - done
-4. rel and abs error
+4. rel and abs error - done
 5. size = size_t - done
 
 
