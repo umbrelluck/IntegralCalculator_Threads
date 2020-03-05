@@ -72,11 +72,11 @@ int main(int argc, char **argv)
 
         calcs.push_back(int_calculator(new_configs));
     }
+    int_calculator::find_best_integral(configs);
 
     // std::vector<std::thread> threads;
 
-    auto start = get_current_time_fenced();
-    
+    // auto start = get_current_time_fenced();
 
     // for (size_t i = 0; i < configs.n_threads; i++)
     // {
@@ -87,17 +87,17 @@ int main(int argc, char **argv)
     //     threads[i].join();
     // }
 
-    std::cout << "Passed!\n";
-    double res = 0;
-    for (auto &x : calcs)
-    {
-        std::cout << "Calculated " << x.result << "\n";
-        res += x.result;
-    }
+    // std::cout << "Passed!\n";
+    // double res = 0;
+    // for (auto &x : calcs)
+    // {
+    //     std::cout << "Calculated " << x.result << "\n";
+    //     res += x.result;
+    // }
 
-    auto time_passed = get_current_time_fenced() - start;
-    std::cout << "Result is " << res << "\n";
-    std::cout << "Time is " << to_us(time_passed) << "\n";
+    // auto time_passed = get_current_time_fenced() - start;
+    // std::cout << "Result is " << res << "\n";
+    // std::cout << "Time is " << to_us(time_passed) << "\n";
     return 0;
 }
 
