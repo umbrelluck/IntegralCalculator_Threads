@@ -62,28 +62,30 @@ int main(int argc, char **argv)
 
     for (size_t i = 0; i < configs.n_threads; i++, x_prev += x_step)
     {
-        // config new_configs = configs;
-        configs.x_arr = std::make_tuple(x_prev, x_prev + x_step);
+        config new_configs = configs;
+
+        new_configs.x_arr = std::make_tuple(x_prev, x_prev + x_step);
         std::cout << "Prev  :  next " << x_prev << "  :  " << x_prev + x_step << "\n";
         // new_configs.y_arr = std::make_tuple(y_prev, y_prev + y_step);
         // x_prev += x_step;
         // y_prev += y_step;
 
-        calcs.push_back(int_calculator(configs));
+        calcs.push_back(int_calculator(new_configs));
     }
 
-    std::vector<std::thread> threads;
+    // std::vector<std::thread> threads;
 
     auto start = get_current_time_fenced();
+    
 
-    for (size_t i = 0; i < configs.n_threads; i++)
-    {
-        threads.emplace_back(int_calculator::find_best_integral, std::ref(calcs[i]));
-    }
-    for (size_t i = 0; i < configs.n_threads; i++)
-    {
-        threads[i].join();
-    }
+    // for (size_t i = 0; i < configs.n_threads; i++)
+    // {
+    //     threads.emplace_back(int_calculator::find_best_integral, std::ref(calcs[i]));
+    // }
+    // for (size_t i = 0; i < configs.n_threads; i++)
+    // {
+    //     threads[i].join();
+    // }
 
     std::cout << "Passed!\n";
     double res = 0;

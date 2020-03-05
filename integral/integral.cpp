@@ -1,6 +1,9 @@
 #include "integral.h"
+#include <cmath>
 
 #include <iostream>
+// #include <mutex>
+// std::mutex m;
 
 inline std::chrono::steady_clock::time_point int_calculator::get_current_time_fenced()
 {
@@ -18,10 +21,10 @@ inline long long int_calculator::to_us(const D &d)
 }
 
 int_calculator::int_calculator(const config confstruct) : prev_result(0),
-                                                           result(0),
-                                                           rel_err(1),
-                                                           abs_err(1),
-                                                           int_config(confstruct) {}
+                                                          result(0),
+                                                          rel_err(1),
+                                                          abs_err(1),
+                                                          int_config(confstruct) {}
 int_calculator::~int_calculator() = default;
 
 double int_calculator::function(double x1, double x2)
@@ -37,7 +40,7 @@ double int_calculator::function(double x1, double x2)
 void int_calculator::find_best_integral(int_calculator &calc)
 {
     int count = 1;
-    size_t step = 2;
+    size_t step = 1000;
 
     auto start = get_current_time_fenced();
     calc.result = calc.integrate(step, count);
@@ -65,6 +68,8 @@ double int_calculator::integrate(int step, int count)
     double d_y = (std::get<1>(int_config.y_arr) - std::get<0>(int_config.y_arr)) / step;
     double x, y, res = 0;
     int jump = 1;
+
+    // std::cout << std::get<0>(int_config.x_arr) << " " << std::get<1>(int_config.x_arr) << std::endl;
 
     for (x = std::get<0>(int_config.x_arr); x < std::get<1>(int_config.x_arr); x += d_x)
     {
