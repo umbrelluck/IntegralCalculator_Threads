@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(intCalculator VERSION 0.1.0)
+set (CMAKE_CXX_STANDARD 14)
 
 set(CONF_LIB_NAME config_lib)
 set(INT_LIB_NAME int_lib)
