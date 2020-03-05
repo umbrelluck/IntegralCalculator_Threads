@@ -18,7 +18,7 @@ public:
     double abs_err;
     config int_config;
 
-    int_calculator(const config &confstruct);
+    int_calculator(const config confstruct);
     ~int_calculator();
 
     double function(double x1, double x2);
@@ -26,8 +26,8 @@ public:
 
     static void find_best_integral(int_calculator &calc);
 
-    bool rel_error(double rel_err);
-    bool abs_error(double abs_err);
+    static bool rel_error(double rel_err, int_calculator &calc);
+    static bool abs_error(double abs_err, int_calculator &calc);
 
     static inline std::chrono::steady_clock::time_point get_current_time_fenced();
 

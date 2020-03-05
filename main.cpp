@@ -1,8 +1,25 @@
 #include <iostream>
 #include <fstream>
 #include <thread>
+#include <chrono>
+#include <atomic>
 
 #include "integral/integral.h"
+
+inline std::chrono::steady_clock::time_point get_current_time_fenced()
+{
+    assert(std::chrono::steady_clock::is_steady &&
+           "Timer should be steady (monotonic).");
+    std::atomic_thread_fence(std::memory_order_seq_cst);
+    auto res_time = std::chrono::steady_clock::now();
+    std::atomic_thread_fence(std::memory_order_seq_cst);
+    return res_time;
+}
+template <class D>
+inline long long to_us(const D &d)
+{
+    return std::chrono::duration_cast<std::chrono::microseconds>(d).count();
+}
 
 int main(int argc, char **argv)
 {
@@ -43,21 +60,24 @@ int main(int argc, char **argv)
 
     std::vector<int_calculator> calcs;
 
-    for (size_t i = 0; i < configs.n_threads; i++)
+    for (size_t i = 0; i < configs.n_threads; i++, x_prev += x_step)
     {
-        config new_configs = configs;
-        new_configs.x_arr = std::make_tuple(x_prev, x_prev + x_step);
-        new_configs.y_arr = std::make_tuple(y_prev, y_prev + y_step);
-        x_prev += x_step;
-        y_prev += y_step;
+        // config new_configs = configs;
+        configs.x_arr = std::make_tuple(x_prev, x_prev + x_step);
+        std::cout << "Prev  :  next " << x_prev << "  :  " << x_prev + x_step << "\n";
+        // new_configs.y_arr = std::make_tuple(y_prev, y_prev + y_step);
+        // x_prev += x_step;
+        // y_prev += y_step;
 
-        calcs.push_back(int_calculator(new_configs));
+        calcs.push_back(int_calculator(configs));
     }
 
     std::vector<std::thread> threads;
+
+    auto start = get_current_time_fenced();
+
     for (size_t i = 0; i < configs.n_threads; i++)
     {
-        //        threads.push_back(std::thread(hello, i));
         threads.emplace_back(int_calculator::find_best_integral, std::ref(calcs[i]));
     }
     for (size_t i = 0; i < configs.n_threads; i++)
@@ -65,13 +85,17 @@ int main(int argc, char **argv)
         threads[i].join();
     }
 
+    std::cout << "Passed!\n";
     double res = 0;
     for (auto &x : calcs)
     {
         std::cout << "Calculated " << x.result << "\n";
         res += x.result;
     }
+
+    auto time_passed = get_current_time_fenced() - start;
     std::cout << "Result is " << res << "\n";
+    std::cout << "Time is " << to_us(time_passed) << "\n";
     return 0;
 }
 

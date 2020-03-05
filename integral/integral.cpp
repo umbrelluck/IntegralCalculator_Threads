@@ -17,7 +17,7 @@ inline long long int_calculator::to_us(const D &d)
     return std::chrono::duration_cast<std::chrono::microseconds>(d).count();
 }
 
-int_calculator::int_calculator(const config &confstruct) : prev_result(0),
+int_calculator::int_calculator(const config confstruct) : prev_result(0),
                                                            result(0),
                                                            rel_err(1),
                                                            abs_err(1),
@@ -42,7 +42,7 @@ void int_calculator::find_best_integral(int_calculator &calc)
     auto start = get_current_time_fenced();
     calc.result = calc.integrate(step, count);
     count = 2;
-    while (calc.abs_error(calc.abs_err) && calc.rel_error(calc.rel_err))
+    while (calc.abs_error(calc.abs_err, calc) && calc.rel_error(calc.rel_err, calc))
     {
         calc.prev_result = calc.result;
         calc.result = calc.prev_result / 4;
@@ -56,7 +56,7 @@ void int_calculator::find_best_integral(int_calculator &calc)
 
     // std::cout << "Result: " << (*calc).result << std::endl;
     // std::cout << "Abs err : rel err " << (*calc).abs_err << " : " << (*calc).rel_err << std::endl;
-    // std::cout << "Time: " << to_us(time_taken) << "mcs\n";
+    std::cout << "Time: " << to_us(time_taken) << "mcs\n";
 }
 
 double int_calculator::integrate(int step, int count)
@@ -66,23 +66,23 @@ double int_calculator::integrate(int step, int count)
     double x, y, res = 0;
     int jump = 1;
 
-    for (x = std::get<0>(int_config.x_arr); x <= std::get<1>(int_config.x_arr); x += d_x)
+    for (x = std::get<0>(int_config.x_arr); x < std::get<1>(int_config.x_arr); x += d_x)
     {
         jump = (count == 2) ? (jump + 1) % 2 : 0;
         for (y = std::get<0>(int_config.y_arr) + (count - 1 - jump) * d_y; y <= std::get<1>(int_config.y_arr); y += d_y * (count - jump))
         {
-            res += function(x, y) * d_x * d_y;
+            res += function(x, y);
         }
     }
-    return res;
+    return res * d_x * d_y;
 }
 
-bool int_calculator::rel_error(double rel_err)
+bool int_calculator::rel_error(double rel_err, int_calculator &calc)
 {
-    return rel_err > this->rel_err;
+    return rel_err > calc.int_config.rel_error;
 }
 
-bool int_calculator::abs_error(double abs_err)
+bool int_calculator::abs_error(double abs_err, int_calculator &calc)
 {
-    return abs_err > this->abs_err;
+    return abs_err > calc.int_config.abs_error;
 }
