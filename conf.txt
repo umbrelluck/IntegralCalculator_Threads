@@ -1,9 +1,0 @@
-n_threads 9
-rel_error 0.001
-x_arr -10 10
-y_arr -10 10
-size 5
-base_val1= 1 2 1 1 5
-base_val2 4 5 1 2 4
-abs_error = 0.0005
-coeff 2 1 4 7 2

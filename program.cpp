@@ -170,10 +170,10 @@ int checkConfig(config &configs, int inst_check)
 }
 
 template <typename fun_T>
-void integrate(fun_T fun, double x_start, double x_end, double *res, config &configs, size_t step, int count)
+void integrate(fun_T fun, double x_start, double x_end, double d_x, double d_y, double &res, config &configs, int count)
 {
-    double d_x = (x_end - x_start) / step;
-    double d_y = (std::get<1>(configs.y_arr) - std::get<0>(configs.y_arr)) / step;
+    // double d_x = (x_end - x_start) / step;
+    // double d_y = (std::get<1>(configs.y_arr) - std::get<0>(configs.y_arr)) / step;
     double x, y;
     double local_res = 0;
     int jump = 1;
@@ -184,7 +184,7 @@ void integrate(fun_T fun, double x_start, double x_end, double *res, config &con
         for (y = std::get<0>(configs.y_arr) + (count - 1 - jump) * d_y; y <= std::get<1>(configs.y_arr); y += d_y * (count - jump))
             local_res += fun(x, y, configs.size, configs.base_val1, configs.base_val2, configs.coeff);
     }
-    *res = local_res * d_x * d_y;
+    res = local_res * d_x * d_y;
 }
 
 template <typename fun_T>
@@ -192,7 +192,7 @@ double find_best_integral(fun_T fun, config &configs)
 {
     double previous = 0;
     int count = 1;
-    size_t step = 2;
+    size_t step = 100;
     bool to_continue = true;
     double rel_err, abs_err;
     double res = 0;
@@ -203,29 +203,34 @@ double find_best_integral(fun_T fun, config &configs)
     double x_start = std::get<0>(configs.x_arr);
     double x_end = std::get<1>(configs.x_arr);
     double x_step = (x_end - x_start) / configs.n_threads;
+    double d_x = (x_end - x_start) / step;
+    double d_y = (std::get<1>(configs.y_arr) - std::get<0>(configs.y_arr)) / step;
 
     for (auto i = 0; i < configs.n_threads; ++i)
         results.push_back(0);
 
     auto start = get_current_time_fenced();
     for (auto i = 0; i < configs.n_threads; ++i)
-        threads.emplace_back(integrate<fun_T>, fun, x_start + i * x_step, x_start + (i + 1) * x_step,
-                             &(results[i]), std::ref(configs), step, count);
+        threads.emplace_back(integrate<fun_T>, fun, x_start + i * x_step, x_start + (i + 1) * x_step, d_x, d_y,
+                             std::ref(results[i]), std::ref(configs), count);
     for (auto &t : threads)
         t.join();
     threads.clear();
     for (auto &val : results)
         res += val;
 
-    count = 2;
+    count = 1;
     while (to_continue)
     {
         previous = res;
-        res = previous / 4;
+        // res = previous / 4;
+        res = 0;
         step *= 2;
+        d_x = (x_end - x_start) / step;
+        d_y = (std::get<1>(configs.y_arr) - std::get<0>(configs.y_arr)) / step;
         for (auto i = 0; i < configs.n_threads; ++i)
-            threads.emplace_back(integrate<fun_T>, fun, x_start + i * x_step, x_start + (i + 1) * x_step,
-                                 &(results[i]), std::ref(configs), step, count);
+            threads.emplace_back(integrate<fun_T>, fun, x_start + i * x_step, x_start + (i + 1) * x_step, d_x, d_y,
+                                 std::ref(results[i]), std::ref(configs), count);
         for (auto &t : threads)
             t.join();
         threads.clear();
@@ -234,6 +239,7 @@ double find_best_integral(fun_T fun, config &configs)
 
         abs_err = fabs(res - previous);
         rel_err = fabs((res - previous) / res);
+        // std::cout << "Abs err : rel err " << abs_err << " : " << rel_err << std::endl;
         to_continue = abs_err > configs.abs_error && rel_err > configs.rel_error;
     }
     auto time_taken = get_current_time_fenced() - start;
@@ -243,7 +249,7 @@ double find_best_integral(fun_T fun, config &configs)
     std::cout << "Abs err : rel err " << abs_err << " : " << rel_err << std::endl;
     std::cout << "Time: " << to_us(time_taken) << "mcs\n";
 
-    std::cout << "The number of steps are " << step * configs.n_threads << "\n";
+    std::cout << "The number of steps are " << step << "\n";
     return res;
 }
 
@@ -254,8 +260,8 @@ int main(int argc, char **argv)
     if (argc == 1)
     {
         std::cout << "  ! No file specified\n";
-        std::cout << "    => Using default name 'conf.txt'\n";
-        fileName = "conf.txt";
+        std::cout << "    => Using default name 'example.conf'\n";
+        fileName = "example.conf";
     }
     else if (argc > 2)
     {
@@ -278,10 +284,10 @@ int main(int argc, char **argv)
         std::cout << "  ! Error in configuration file\n";
         return 1;
     }
-
     double value = find_best_integral(function, configs);
     // std::cout << "Result is " << value << "\n";
 
+    std::cout << configs.n_threads;
     return 0;
 }
 /* 
