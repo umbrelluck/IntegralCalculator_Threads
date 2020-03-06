@@ -24,7 +24,7 @@ public:
 
     double function(double x1, double x2);
     void integrate(int step, int count);
-    void _helper(std::vector<std::thread> &threads, double step, double count);
+    static void _helper(int_calculator &calc, double step, double count);
 
     static double integrate_threads(std::vector<int_calculator> &calcs, double step, double count);
 
