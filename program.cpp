@@ -169,19 +169,22 @@ int checkConfig(config &configs, int inst_check)
     return 0;
 }
 
+bool okil(double x, double x_end, double d_x) 
+{ 
+    return fabs(x_end - x) / d_x > 0.9999999999; 
+}
+
 template <typename fun_T>
 void integrate(fun_T fun, double x_start, double x_end, double d_x, double d_y, double &res, config &configs, int count)
 {
-    // double d_x = (x_end - x_start) / step;
-    // double d_y = (std::get<1>(configs.y_arr) - std::get<0>(configs.y_arr)) / step;
     double x, y;
     double local_res = 0;
     int jump = 1;
 
-    for (x = x_start; x < x_end; x += d_x)
+    for (x = x_start; okil(x, x_end, d_x); x += d_x)
     {
         jump = (count == 2) ? (jump + 1) % 2 : 0;
-        for (y = std::get<0>(configs.y_arr) + (count - 1 - jump) * d_y; y <= std::get<1>(configs.y_arr); y += d_y * (count - jump))
+        for (y = std::get<0>(configs.y_arr) + (count - 1 - jump) * d_y; okil(y,std::get<1>(configs.y_arr),d_y); y += d_y * (count - jump))
             local_res += fun(x, y, configs.size, configs.base_val1, configs.base_val2, configs.coeff);
     }
     res = local_res * d_x * d_y;
@@ -192,7 +195,7 @@ double find_best_integral(fun_T fun, config &configs)
 {
     double previous = 0;
     int count = 1;
-    size_t step = 100;
+    size_t step = 300;
     bool to_continue = true;
     double rel_err, abs_err;
     double res = 0;
@@ -203,8 +206,8 @@ double find_best_integral(fun_T fun, config &configs)
     double x_start = std::get<0>(configs.x_arr);
     double x_end = std::get<1>(configs.x_arr);
     double x_step = (x_end - x_start) / configs.n_threads;
-    double d_x = (x_end - x_start) / step;
     double d_y = (std::get<1>(configs.y_arr) - std::get<0>(configs.y_arr)) / step;
+    double d_x = (std::get<1>(configs.x_arr) - std::get<0>(configs.x_arr)) / step;
 
     for (auto i = 0; i < configs.n_threads; ++i)
         results.push_back(0);
@@ -223,10 +226,9 @@ double find_best_integral(fun_T fun, config &configs)
     while (to_continue)
     {
         previous = res;
-        // res = previous / 4;
         res = 0;
         step *= 2;
-        d_x = (x_end - x_start) / step;
+        d_x = (std::get<1>(configs.x_arr) - std::get<0>(configs.x_arr)) / step;
         d_y = (std::get<1>(configs.y_arr) - std::get<0>(configs.y_arr)) / step;
         for (auto i = 0; i < configs.n_threads; ++i)
             threads.emplace_back(integrate<fun_T>, fun, x_start + i * x_step, x_start + (i + 1) * x_step, d_x, d_y,
@@ -239,7 +241,6 @@ double find_best_integral(fun_T fun, config &configs)
 
         abs_err = fabs(res - previous);
         rel_err = fabs((res - previous) / res);
-        // std::cout << "Abs err : rel err " << abs_err << " : " << rel_err << std::endl;
         to_continue = abs_err > configs.abs_error && rel_err > configs.rel_error;
     }
     auto time_taken = get_current_time_fenced() - start;
@@ -249,7 +250,6 @@ double find_best_integral(fun_T fun, config &configs)
     std::cout << "Abs err : rel err " << abs_err << " : " << rel_err << std::endl;
     std::cout << "Time: " << to_us(time_taken) << "mcs\n";
 
-    std::cout << "The number of steps are " << step << "\n";
     return res;
 }
 
@@ -285,20 +285,5 @@ int main(int argc, char **argv)
         return 1;
     }
     double value = find_best_integral(function, configs);
-    // std::cout << "Result is " << value << "\n";
-
-    std::cout << configs.n_threads;
     return 0;
 }
-/* 
-
-
-1. function x2 faster - done 
-2. errors in reading
-3. time - done
-4. rel and abs error - done
-5. size = size_t - done
-
-
-
- */
