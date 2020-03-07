@@ -23,10 +23,10 @@ public:
     ~int_calculator();
 
     double function(double x1, double x2);
-    void integrate(int step, int count);
-    static void _helper(int_calculator &calc, double step, double count);
+    void integrate(int step);
+    static void _helper(int_calculator &calc, double step);
 
-    static double integrate_threads(std::vector<int_calculator> &calcs, double step, double count);
+    static double integrate_threads(std::vector<int_calculator> &calcs, double step);
 
     static void find_best_integral(config &configs);
 

@@ -23,7 +23,7 @@ inline long long to_us(const D &d)
 
 int main(int argc, char **argv)
 {
-    std::cout << "\n";
+    std::cout << "-----------------\n";
     std::string fileName;
     if (argc == 1)
     {
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
         config new_configs = configs;
 
         new_configs.x_arr = std::make_tuple(x_prev, x_prev + x_step);
-        std::cout << "Prev  :  next " << x_prev << "  :  " << x_prev + x_step << "\n";
+        // std::cout << "Prev  :  next " << x_prev << "  :  " << x_prev + x_step << "\n";
         // new_configs.y_arr = std::make_tuple(y_prev, y_prev + y_step);
         // x_prev += x_step;
         // y_prev += y_step;

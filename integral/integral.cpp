@@ -20,7 +20,10 @@ inline long long int_calculator::to_us(const D &d)
 }
 
 int_calculator::int_calculator(const config &confstruct) : int_config(confstruct),
-                                                           result(1) {}
+                                                           result(1),
+                                                           prev_result(0),
+                                                           rel_err(1),
+                                                           abs_err(1) {}
 int_calculator::~int_calculator() = default;
 
 double int_calculator::function(double x1, double x2)
@@ -33,10 +36,10 @@ double int_calculator::function(double x1, double x2)
     return -sum;
 }
 
-void int_calculator::integrate(int step, int count)
+void int_calculator::integrate(int step)
 {
-    double d_x = (std::get<1>(int_config.x_arr) - std::get<0>(int_config.x_arr)) / step;
-    double d_y = (std::get<1>(int_config.y_arr) - std::get<0>(int_config.y_arr)) / step;
+    double d_x = ((std::get<1>(int_config.x_arr) - std::get<0>(int_config.x_arr)) * sqrt(int_config.n_threads)) / sqrt(step);
+    double d_y = ((std::get<1>(int_config.y_arr) - std::get<0>(int_config.y_arr))) / sqrt(step);
     double x, y, res = 0;
     int jump = 1;
 
@@ -44,8 +47,7 @@ void int_calculator::integrate(int step, int count)
 
     for (x = std::get<0>(int_config.x_arr); x < std::get<1>(int_config.x_arr); x += d_x)
     {
-        jump = (count == 2) ? (jump + 1) % 2 : 0;
-        for (y = std::get<0>(int_config.y_arr) + (count - 1 - jump) * d_y; y <= std::get<1>(int_config.y_arr); y += d_y * (count - jump))
+        for (y = std::get<0>(int_config.y_arr); y <= std::get<1>(int_config.y_arr); y += d_y)
             res += function(x, y);
     }
     result = res * d_x * d_y;
@@ -65,39 +67,45 @@ void int_calculator::find_best_integral(config &configs)
     }
 
     auto start = get_current_time_fenced();
-    double step = 100;
+    double step = 300;
     double prev_res = 0;
-    double res = int_calculator::integrate_threads(calcs, step, 1);
+    double res = int_calculator::integrate_threads(calcs, step);
     double abs_err = fabs(res - prev_res);
     double rel_err = fabs((res - prev_res) / res);
 
-    while (int_calculator::abs_error(abs_err, configs) && int_calculator::rel_error(rel_err, configs))
+    while ((int_calculator::abs_error(abs_err, configs) && int_calculator::rel_error(rel_err, configs)))
     {
         prev_res = res;
-        res = prev_res / 4;
+        // res = prev_res / 4;
+        res = 0;
         step *= 2;
-        res += int_calculator::integrate_threads(calcs, step, 2);
+        res += int_calculator::integrate_threads(calcs, step);
 
         abs_err = fabs(res - prev_res);
         rel_err = fabs((res - prev_res) / res);
 
-        std::cout << "Steps " << step << "\n";
+        // std::cout << "Steps " << step << "\n";
+        // std::cout << "Abs err : rel err " << abs_err << " : " << rel_err << std::endl;
     }
-    auto time_taken = get_current_time_fenced() - start;
+    auto time_taken = to_us(get_current_time_fenced() - start);
 
-    std::cout << "Result: " << res << std::endl;
-    std::cout << "Abs err : rel err " << abs_err << " : " << rel_err << std::endl;
-    std::cout << "Time: " << to_us(time_taken) << "mcs\n";
+    std::cout << "Result: " << res << "\n";
+    std::cout << "Abs err : rel err " << abs_err << " : " << rel_err << "\n";
+    std::cout << "Time: " << time_taken << "mcs\n";
 }
 
-double int_calculator::integrate_threads(std::vector<int_calculator> &calcs, double step, double count)
+double int_calculator::integrate_threads(std::vector<int_calculator> &calcs, double step)
 {
     std::vector<std::thread> threads;
-    for (int i = 0; i < calcs.size(); ++i)
+    size_t n = calcs.size();
+    double step_tmp = step;
+    for (auto i = 0; i < n; ++i)
     {
-        // calcs[i]._helper(threads, step, count);
-        // auto func = calcs[i].integrate;
-        threads.emplace_back(int_calculator::_helper, std::ref(calcs[i]), step, count);
+        // if (i < n - 1)
+        threads.emplace_back(int_calculator::_helper, std::ref(calcs[i]), step);
+        // else
+        //     threads.emplace_back(int_calculator::_helper, std::ref(calcs[i]), step_tmp);
+        // step_tmp -= step / n;
     }
     for (auto &t : threads)
         t.join();
@@ -107,9 +115,9 @@ double int_calculator::integrate_threads(std::vector<int_calculator> &calcs, dou
     return res;
 }
 
-void int_calculator::_helper(int_calculator &calc, double step, double count)
+void int_calculator::_helper(int_calculator &calc, double step)
 {
-    calc.integrate(step, count);
+    calc.integrate(step);
 }
 
 bool int_calculator::rel_error(double rel_err, config &conf)
